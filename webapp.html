@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Color Scheme Generator</title>
+  <style>
+    body {
+      font-family: 'Trebuchet MS', sans-serif;
+      background-color: #dbccb6; /* Off-white background */
+      color: #000000;
+      padding: 20px;
+      margin: 0;
+      text-align: center;
+    }
+    h1 {
+      color: #b37062;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2em;
+      margin: 10px 0;
+      color: #b37062;
+    }
+    input[type="color"] {
+      width: 80px;
+      height: 40px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button {
+      background-color: #81917c;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    #colors {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .color-box {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Color Scheme Generator</h1>
+  <p>Select a base color by clicking the colored box:</p>
+  <input type="color" id="baseColor" />
+  <button onclick="generateScheme()">Generate Scheme</button>
+
+  <div id="colors"></div>
+
+  <script>
+    function hexToHSL(hex) {
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+
+      return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+      };
+    }
+
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      const m = l - c/2;
+      let r=0, g=0, b=0;
+
+      if (0 <= h && h < 60) [r, g, b] = [c, x, 0];
+      else if (60 <= h && h < 120) [r, g, b] = [x, c, 0];
+      else if (120 <= h && h < 180) [r, g, b] = [0, c, x];
+      else if (180 <= h && h < 240) [r, g, b] = [0, x, c];
+      else if (240 <= h && h < 300) [r, g, b] = [x, 0, c];
+      else if (300 <= h && h < 360) [r, g, b] = [c, 0, x];
+
+      r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
+      g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
+      b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
+
+      return `#${r}${g}${b}`;
+    }
+
+    function generateScheme() {
+      const baseHex = document.getElementById("baseColor").value;
+      const hsl = hexToHSL(baseHex);
+
+      const colors = [
+        { name: "Base", h: hsl.h, s: hsl.s, l: hsl.l },
+        { name: "Lighter", h: hsl.h, s: hsl.s, l: Math.min(hsl.l + 20, 100) },
+        { name: "Darker", h: hsl.h, s: hsl.s, l: Math.max(hsl.l - 20, 0) },
+        { name: "Complement", h: (hsl.h + 180) % 360, s: hsl.s, l: hsl.l },
+        { name: "Analogous", h: (hsl.h + 30) % 360, s: hsl.s, l: hsl.l }
+      ];
+
+      const colorsDiv = document.getElementById("colors");
+      colorsDiv.innerHTML = '';
+
+      colors.forEach(c => {
+        const hex = hslToHex(c.h, c.s, c.l);
+        const box = document.createElement("div");
+        box.className = "color-box";
+        box.style.backgroundColor = hex;
+        box.textContent = hex.toUpperCase();
+        colorsDiv.appendChild(box);
+      });
+    }
+  </script>
+  <br><br>
+  <a href="scratch.html" style="color:#b37062; text-decoration: none;">Return to homepage</a>
+</body>
+</html>
+
